@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>توقعات المباريات - LiveKoora</title>
-    <!-- كود إعلانات Monetag Rewarded Popup الخاص بك -->
     <script src='//libtl.com/sdk.js' data-zone='11820128' data-sdk='show_11820128'></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -271,20 +270,20 @@
         function submitPrediction() {
             playChime();
 
-            // تنفيذ إعلان Rewarded Popup الخاص بـ Monetag
+            // تنفيذ إعلان Rewarded Popup (الأعلى ربحاً)
             if (typeof show_11820128 === 'function') {
                 show_11820128('pop').then(() => {
-                    sendDataToSheet();
+                    executeSend();
                 }).catch(e => {
                     console.error("Ad error:", e);
-                    sendDataToSheet();
+                    executeSend();
                 });
             } else {
-                sendDataToSheet();
+                executeSend();
             }
         }
 
-        function sendDataToSheet() {
+        function executeSend() {
             const score1 = document.getElementById('score1').value;
             const score2 = document.getElementById('score2').value;
             const team1 = document.getElementById('name1').innerText;
