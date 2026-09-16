@@ -3,84 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>توقع المباريات</title>
-    <!-- تضمين مكتبة تيليجرام ويب أب -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>توقع المباراة</title>
+    <!-- تضمين سكريبت إعلانات مونتاج Rewarded Popup -->
+    <script src="//lib.monetag.com/v.js" data-zone="11820128" async></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
+            background-color: #0f172a;
+            color: #ffffff;
             text-align: center;
             padding: 20px;
             margin: 0;
         }
         .container {
             max-width: 400px;
-            margin: 0 auto;
-            background: #fff;
+            margin: 40px auto;
+            background: #1e293b;
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        h2 { color: #0088cc; }
-        .match-card {
-            background: #eef2f3;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-weight: bold;
+        h2 {
+            color: #38bdf8;
         }
-        select, button {
+        input, button {
             width: 100%;
             padding: 12px;
-            margin-top: 10px;
+            margin-top: 15px;
             border-radius: 8px;
-            border: 1px solid #ccc;
+            border: none;
             font-size: 16px;
+            box-sizing: border-box;
+        }
+        input {
+            background: #334155;
+            color: #fff;
         }
         button {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            cursor: pointer;
+            background: #0ea5e9;
+            color: #fff;
             font-weight: bold;
+            cursor: pointer;
         }
-        button:hover { background-color: #218838; }
+        button:hover {
+            background: #0284c7;
+        }
         #loading {
             display: none;
-            margin-top: 10px;
-            color: #666;
+            margin-top: 15px;
+            color: #facc15;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>منصة التوقعات</h2>
-        <p id="welcome-user">مرحباً بك</p>
-
-        <div class="match-card" id="match-name">
-            المباراة: ريال مدريد ضد برشلونة
-        </div>
-
+        <h3 id="welcome-user">مرحباً بك</h3>
+        <h2 id="match-name">ريال مدريد ضد برشلونة</h2>
+        <p>قم بإدخال توقعك للمباراة:</p>
+        
         <form id="prediction-form">
-            <label for="prediction">اختر توقعك:</label>
-            <select id="prediction" required>
-                <option value="">-- اختر النتيجة --</option>
-                <option value="فوز ريال مدريد">فوز ريال مدريد</option>
-                <option value="تعادل">تعادل</option>
-                <option value="فوز برشلونة">فوز برشلونة</option>
-            </select>
-
+            <input type="text" id="prediction" placeholder="مثال: 2-1" required>
             <button type="submit" id="submit-btn">إرسال التوقع</button>
             <div id="loading">جاري الإرسال وحفظ التوقع...</div>
         </form>
     </div>
 
-    <!-- سكربت إعلانات Monetag (اختياري/يمكن استبدال الرابط بكود الإعلان الخاص بك) -->
+    <!-- سكربت تليجرام ويب أب والمنطق -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        // رابط الـ Google Apps Script الخاص بك (ضعه هنا بعد نشره)
+        // ضع رابط الـ Google Apps Script الخاص بك هنا
         const SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE";
 
         // تهيئة تيليجرام ويب أب
@@ -93,26 +85,11 @@
             document.getElementById("welcome-user").innerText = `مرحباً، ${tg.initDataUnsafe.user.first_name}`;
         }
 
-        document.getElementById("prediction-form").addEventListener("submit", function(e) {
-            e.preventDefault();
-
+        // دالة إرسال البيانات إلى جوجل شيت
+        function sendDataToSheet() {
             const prediction = document.getElementById("prediction").value;
             const match = document.getElementById("match-name").innerText;
-            const submitBtn = document.getElementById("submit-btn");
-            const loading = document.getElementById("loading");
 
-            submitBtn.style.display = "none";
-            loading.style.display = "block";
-
-            // دمج إعلان Monetag كخطوة تفاعلية قبل الإرسال (اختياري، أو يتم فتحه كـ Popunder)
-            try {
-                // محاكاة استدعاء إعلان أو فتح رابط إعلاني إذا لزم الأمر
-                // window.open('YOUR_MONETAG_AD_LINK', '_blank');
-            } catch (err) {
-                console.log("Ad error handled");
-            }
-
-            // إرسال البيانات إلى Google Sheets عبر Apps Script باستخدام no-cors لتفادي مشاكل الـ CORS
             fetch(SCRIPT_URL, {
                 method: "POST",
                 mode: "no-cors",
@@ -126,15 +103,39 @@
                 })
             })
             .then(() => {
-                alert("تم إرسال توقعك بنجاح!");
-                tg.close(); // إغلاق الـ Web App والعودة للتيليجرام
+                setTimeout(() => {
+                    tg.close();
+                }, 1000);
             })
             .catch(error => {
                 console.error("Error:", error);
-                alert("حدث خطأ أثناء الإرسال، يجيب المحاولة لاحقاً.");
-                submitBtn.style.display = "block";
-                loading.style.display = "none";
+                setTimeout(() => {
+                    tg.close();
+                }, 1000);
             });
+        }
+
+        document.getElementById("prediction-form").addEventListener("submit", function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById("submit-btn");
+            const loading = document.getElementById("loading");
+
+            submitBtn.style.display = "none";
+            loading.style.display = "block";
+
+            // تشغيل إعلان Rewarded Popup ثم إرسال البيانات بعد تفاعل المستخدم أو إغلاقه
+            if (typeof show_11820128 === 'function') {
+                show_11820128('pop').then(() => {
+                    sendDataToSheet();
+                }).catch(e => {
+                    console.error("Ad error:", e);
+                    sendDataToSheet();
+                });
+            } else {
+                // في حال لم يتم تحميل السكريبت لسبب ما، يتم الإرسال مباشرة
+                sendDataToSheet();
+            }
         });
     </script>
 </body>
