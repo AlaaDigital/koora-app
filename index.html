@@ -11,38 +11,60 @@
             background-color: #121212;
             color: #ffffff;
             text-align: center;
-            padding: 20px;
+            padding: 15px;
             margin: 0;
         }
         .card {
             background: #1e1e1e;
             border-radius: 12px;
-            padding: 20px;
+            padding: 20px 15px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             margin-top: 10px;
         }
-        .teams {
+        .teams-container {
             display: flex;
-            justify-content: space-between;
+            justify-content: space-around;
             align-items: center;
             margin: 20px 0;
         }
-        .team { font-weight: bold; font-size: 1.1em; }
+        .team-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 40%;
+        }
+        .team-logo {
+            width: 65px;
+            height: 65px;
+            object-fit: contain;
+            margin-bottom: 8px;
+        }
+        .team-name {
+            font-weight: bold;
+            font-size: 0.95em;
+            margin-bottom: 10px;
+        }
         input[type="number"] {
-            width: 50px;
-            padding: 8px;
-            font-size: 1.2em;
+            width: 55px;
+            height: 40px;
+            padding: 5px;
+            font-size: 1.3em;
             text-align: center;
-            border-radius: 6px;
-            border: 1px solid #333;
+            border-radius: 8px;
+            border: 1px solid #444;
             background: #2a2a2a;
             color: #fff;
+        }
+        .vs {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #888;
         }
         button {
             background-color: #28a745;
             color: white;
             border: none;
-            padding: 12px 24px;
+            padding: 12px;
             font-size: 1em;
             border-radius: 8px;
             cursor: pointer;
@@ -56,17 +78,27 @@
 <body>
 
     <h2>⚽ مسابقة توقعات كورة دايلى</h2>
-    <p>توقع النتيجة واكسب المتابعة!</p>
+    <p>توقع نتيجة المباراة واكسب الجائزة!</p>
 
     <div class="card">
-        <h3>مباراة اليوم</h3>
-        <div class="teams">
-            <div class="team">الفريق الأول</div>
-            <input type="number" id="score1" min="0" value="0">
-            <span>-</span>
-            <input type="number" id="score2" min="0" value="0">
-            <div class="team">الفريق الثاني</div>
+        <div class="teams-container">
+            <!-- الفريق الأول -->
+            <div class="team-box">
+                <img id="logo1" class="team-logo" src="https://via.placeholder.com/65?text=Team1" alt="الفريق الأول">
+                <div id="name1" class="team-name">ريال مدريد</div>
+                <input type="number" id="score1" min="0" value="0">
+            </div>
+
+            <div class="vs">VS</div>
+
+            <!-- الفريق الثاني -->
+            <div class="team-box">
+                <img id="logo2" class="team-logo" src="https://via.placeholder.com/65?text=Team2" alt="الفريق الثاني">
+                <div id="name2" class="team-name">برشلونة</div>
+                <input type="number" id="score2" min="0" value="0">
+            </div>
         </div>
+
         <button onclick="submitPrediction()">إرسال التوقع 🚀</button>
     </div>
 
@@ -74,11 +106,22 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // يمكن تغيير الشعارات والأسماء من هنا أو عبر إرسال روابط في URL
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if (urlParams.get('team1')) document.getElementById('name1').innerText = urlParams.get('team1');
+        if (urlParams.get('team2')) document.getElementById('name2').innerText = urlParams.get('team2');
+        if (urlParams.get('logo1')) document.getElementById('logo1').src = urlParams.get('logo1');
+        if (urlParams.get('logo2')) document.getElementById('logo2').src = urlParams.get('logo2');
+
         function submitPrediction() {
             const score1 = document.getElementById('score1').value;
             const score2 = document.getElementById('score2').value;
+            const team1 = document.getElementById('name1').innerText;
+            const team2 = document.getElementById('name2').innerText;
             
             const data = {
+                match: `${team1} vs ${team2}`,
                 prediction: `${score1} - ${score2}`,
                 user: tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "زائر"
             };
