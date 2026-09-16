@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>توقعات المباريات - LiveKoora</title>
+    <!-- كود إعلانات Monetag الخاص بك -->
     <script src='//libtl.com/sdk.js' data-zone='11820128' data-sdk='show_11820128'></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -269,6 +270,24 @@
 
         function submitPrediction() {
             playChime();
+
+            // التحقق من تفعيل كود إعلانات Monetag وعرضه للمستخدم عند الضغط
+            if (typeof show_11820128 === 'function') {
+                show_11820128().then(() => {
+                    // يتم تنفيذ هذا الجزء بعد أن يشاهد المستخدم الإعلان بالكامل أو يغلقه
+                    sendDataToSheet();
+                }).catch((e) => {
+                    // في حال حدث خطأ في تحميل الإعلان، يتم إرسال التوقع مباشرة لكي لا يتعطل المستخدم
+                    console.error("Ad error:", e);
+                    sendDataToSheet();
+                });
+            } else {
+                // احتياطي في حال لم يتم تحميل دالة الإعلان لسبب ما
+                sendDataToSheet();
+            }
+        }
+
+        function sendDataToSheet() {
             const score1 = document.getElementById('score1').value;
             const score2 = document.getElementById('score2').value;
             const team1 = document.getElementById('name1').innerText;
