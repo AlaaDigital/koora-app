@@ -3,100 +3,315 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>توقعات المباريات</title>
+    <title>توقعات المباريات - LiveKoora</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
+        :root {
+            --primary: #00ff87;
+            --secondary: #60eefc;
+            --bg-dark: #0b0e14;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border-glow: rgba(0, 255, 135, 0.3);
         }
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            background: #1e1e1e;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-        h2 {
-            color: #ffcc00;
-        }
-        .teams {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            margin: 20px 0;
-        }
-        .team img {
-            width: 70px;
-            height: 70px;
-            object-fit: contain;
-        }
-        .team span {
-            display: block;
-            margin-top: 8px;
-            font-weight: bold;
-        }
-        input, button {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border-radius: 8px;
-            border: none;
-            font-size: 16px;
+
+        * {
             box-sizing: border-box;
+            user-select: none;
         }
-        input {
-            background: #2c2c2c;
-            color: #fff;
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0b0e14 0%, #1a2332 100%);
+            color: #ffffff;
             text-align: center;
+            padding: 15px;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-        button {
-            background: #ffcc00;
-            color: #121212;
+
+        .header {
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            background: linear-gradient(45deg, #ff0055, #ff5050);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
             font-weight: bold;
-            cursor: pointer;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.5);
+            animation: pulse 1.5s infinite;
         }
-        button:hover {
-            background: #e6b800;
+
+        h1 {
+            font-size: 1.6em;
+            margin: 10px 0 5px;
+            background: linear-gradient(to right, #00ff87, #60eefc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .motivational-text {
+            color: #a0aec0;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px 15px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .teams-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 25px 0;
+        }
+
+        .team-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 38%;
+        }
+
+        .logo-wrapper {
+            position: relative;
+            width: 75px;
+            height: 75px;
+            margin-bottom: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-glow);
+            box-shadow: 0 0 15px rgba(0, 255, 135, 0.1);
+        }
+
+        .team-logo {
+            width: 55px;
+            height: 55px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+        }
+
+        .team-name {
+            font-weight: 700;
+            font-size: 1em;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+
+        .score-input {
+            width: 60px;
+            height: 50px;
+            font-size: 1.6em;
+            font-weight: bold;
+            text-align: center;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--primary);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .score-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(0, 255, 135, 0.5);
+            transform: scale(1.05);
+        }
+
+        .vs-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .vs-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff0055, #7928ca);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-style: italic;
+            font-size: 0.9em;
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
+        }
+
+        .btn-submit {
+            background: linear-gradient(90deg, #00ff87 0%, #60eefc 100%);
+            color: #000;
+            border: none;
+            padding: 16px;
+            font-size: 1.1em;
+            border-radius: 14px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 20px rgba(0, 255, 135, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.97);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>توقع نتيجة المباراة</h2>
-        <div class="teams">
-            <div class="team">
-                <img src="https://i.imgur.com/VJrj3sC.png" alt="غزل المحلة">
-                <span>غزل المحلة</span>
+    <div class="header">
+        <span class="badge">🔥 الدوري المصري</span>
+        <h1>توقع واكسب مع LiveKoora</h1>
+        <p class="motivational-text">قِمة الدوري المصري: غزل المحلة × الزمالك ⚽<br>توقع النتيجة الصحيحة وانضم لقائمة الأبطال!</p>
+    </div>
+
+    <div class="card">
+        <div class="teams-container">
+            <!-- الفريق الأول: غزل المحلة -->
+            <div class="team-box">
+                <div class="logo-wrapper">
+                    <img id="logo1" class="team-logo" src="https://i.imgur.com/VJrj3sC.png" alt="غزل المحلة">
+                </div>
+                <div id="name1" class="team-name">غزل المحلة</div>
+                <input type="number" id="score1" class="score-input" min="0" value="0">
             </div>
-            <span>VS</span>
-            <div class="team">
-                <img src="https://i.imgur.com/PFPjxmM.png" alt="الزمالك">
-                <span>الزمالك</span>
+
+            <div class="vs-container">
+                <div class="vs-circle">VS</div>
+            </div>
+
+            <!-- الفريق الثاني: الزمالك -->
+            <div class="team-box">
+                <div class="logo-wrapper">
+                    <img id="logo2" class="team-logo" src="https://i.imgur.com/PFPjxmM.png" alt="الزمالك">
+                </div>
+                <div id="name2" class="team-name">الزمالك</div>
+                <input type="number" id="score2" class="score-input" min="0" value="0">
             </div>
         </div>
 
-        <input type="text" id="username" placeholder="اكتب اسمك الثلاثي">
-        <input type="text" id="prediction" placeholder="توقعك (مثال: 2-1)">
-        <button onclick="sendPrediction()">إرسال التوقع</button>
+        <button class="btn-submit" onclick="submitPrediction()">إرسال التوقع واعتلاء الصدارة 🚀</button>
     </div>
 
     <script>
-        function sendPrediction() {
-            var name = document.getElementById('username').value;
-            var pred = document.getElementById('prediction').value;
-            if(name === "" || pred === "") {
-                alert("الرجاء ملء جميع الحقول!");
-                return;
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.expand();
+        }
+
+        // رابط Apps Script الخاص بك لإرسال البيانات لجوجل شيت
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHgsMRzeazDEmoMJgbJTbesVYVJsixwPZTDn3W7qQYMUmwZWOlhBlkJusis51pQtsx/exec";
+
+        // إنشاء مؤثرات صوتية تحفيزية
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playChime() {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
             }
-            alert("تم إرسال توقعك بنجاح، بالتوفيق!");
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        window.addEventListener('click', () => { if(audioCtx.state === 'suspended') audioCtx.resume(); }, {once: true});
+
+        // قراءة المتغيرات من الرابط إن وجدت
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('team1')) document.getElementById('name1').innerText = urlParams.get('team1');
+        if (urlParams.get('team2')) document.getElementById('name2').innerText = urlParams.get('team2');
+        if (urlParams.get('logo1')) document.getElementById('logo1').src = urlParams.get('logo1');
+        if (urlParams.get('logo2')) document.getElementById('logo2').src = urlParams.get('logo2');
+
+        function submitPrediction() {
+            playChime();
+            const score1 = document.getElementById('score1').value;
+            const score2 = document.getElementById('score2').value;
+            const team1 = document.getElementById('name1').innerText;
+            const team2 = document.getElementById('name2').innerText;
+            
+            // جلب اسم المستخدم من تلجرام
+            const telegramUser = tg?.initDataUnsafe?.user;
+            const username = telegramUser 
+                ? (telegramUser.username ? "@" + telegramUser.username : telegramUser.first_name) 
+                : "زائر";
+
+            const matchName = `${team1} × ${team2}`;
+            const predictionResult = `${score1} - ${score2}`;
+
+            const payload = {
+                username: username,
+                prediction: predictionResult,
+                match: matchName
+            };
+
+            // إرسال البيانات إلى Google Sheets
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                cache: "no-cache",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8",
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                setTimeout(() => {
+                    alert("تم تسجيل توقعك بنجاح في جدول الأبطال! ⚽");
+                    if (tg) tg.close();
+                }, 300);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                setTimeout(() => {
+                    alert("تم إرسال التوقع، بالتوفيق! 🚀");
+                    if (tg) tg.close();
+                }, 300);
+            });
         }
     </script>
-
 </body>
 </html>
