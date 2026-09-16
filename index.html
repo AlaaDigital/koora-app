@@ -242,12 +242,11 @@
             tg.expand();
         }
 
-        // رابط Apps Script الخاص بك لإرسال البيانات لجوجل شيت
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHgsMRzeazDEmoMJgbJTbesVYVJsixwPZTDn3W7qQYMUmwZWOlhBlkJusis51pQtsx/exec";
 
-        // التحقق من أن المستخدم قام بالتوقع مسبقاً على هذا الجهاز
+        // التحقق من حساب المستخدم لمنع تكرار التوقع جذرياً
         const telegramUser = tg?.initDataUnsafe?.user;
-        const userId = telegramUser ? telegramUser.id : "guest_user";
+        const userId = telegramUser ? telegramUser.id : "guest_" + Date.now();
         const storageKey = `livekoora_voted_${userId}`;
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -264,13 +263,9 @@
             document.getElementById('score2').disabled = true;
         }
 
-        // إنشاء مؤثرات صوتية تحفيزية
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
         function playChime() {
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'sine';
@@ -286,7 +281,6 @@
 
         window.addEventListener('click', () => { if(audioCtx.state === 'suspended') audioCtx.resume(); }, {once: true});
 
-        // قراءة المتغيرات من الرابط إن وجدت
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('team1')) document.getElementById('name1').innerText = urlParams.get('team1');
         if (urlParams.get('team2')) document.getElementById('name2').innerText = urlParams.get('team2');
@@ -299,22 +293,40 @@
                 return;
             }
 
+            // قفل الزر فوراً لمنع أي ضغطات متكررة أثناء تنفيذ العملية
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = "جاري المعالجة...";
+
             playChime();
 
-            // تنفيذ إعلان Rewarded Popup (الأعلى ربحاً)
+            // تنفيذ استدعاء الإعلان مع حماية البرمجية للتأكد من إرسال التوقع حتى لو فشل الإعلان
+            let adTriggered = false;
+
             if (typeof show_11820128 === 'function') {
-                show_11820128('pop').then(() => {
-                    executeSend();
-                }).catch(e => {
-                    console.error("Ad error:", e);
-                    executeSend();
-                });
-            } else {
+                try {
+                    show_11820128('pop').then(() => {
+                        executeSend();
+                    }).catch(e => {
+                        console.error("Ad error:", e);
+                        executeSend();
+                    });
+                    adTriggered = true;
+                } catch (err) {
+                    console.error("Ad exception:", err);
+                }
+            }
+
+            // إذا لم يتم استدعاء الدالة بشكل صحيح، يتم إرسال التوقع مباشرة
+            if (!adTriggered) {
                 executeSend();
             }
         }
 
         function executeSend() {
+            // حفظ علامة التصويت فوراً لمنع أي تكرار مستقبلي
+            localStorage.setItem(storageKey, "true");
+
             const score1 = document.getElementById('score1').value;
             const score2 = document.getElementById('score2').value;
             const team1 = document.getElementById('name1').innerText;
@@ -333,7 +345,6 @@
                 match: matchName
             };
 
-            // إرسال البيانات إلى Google Sheets
             fetch(SCRIPT_URL, {
                 method: "POST",
                 mode: "no-cors",
@@ -344,10 +355,7 @@
                 body: JSON.stringify(payload)
             })
             .then(() => {
-                // حفظ حالة التصويت محلياً لمنع التكرار
-                localStorage.setItem(storageKey, "true");
                 lockAppAsVoted();
-
                 setTimeout(() => {
                     alert("تم تسجيل توقعك بنجاح في جدول الأبطال! ⚽");
                     if (tg) tg.close();
@@ -355,9 +363,7 @@
             })
             .catch(error => {
                 console.error("Error:", error);
-                localStorage.setItem(storageKey, "true");
                 lockAppAsVoted();
-
                 setTimeout(() => {
                     alert("تم إرسال التوقع، بالتوفيق! 🚀");
                     if (tg) tg.close();
