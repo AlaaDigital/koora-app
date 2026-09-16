@@ -229,10 +229,15 @@
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.expand();
+        }
 
-        // إنشاء مؤثرات صوتية تحفيزية عبر البرمجة دون الحاجة لملفات خارجية
+        // رابط Apps Script الخاص بك لإرسال البيانات لجوجل شيت
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHgsMRzeazDEmoMJgbJTbesVYVJsixwPZTDn3W7qQYMUmwZWOlhBlkJusis51pQtsx/exec";
+
+        // إنشاء مؤثرات صوتية تحفيزية
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         function playChime() {
@@ -242,8 +247,8 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
-            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3); // A5
+            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
             gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
             osc.connect(gain);
@@ -252,7 +257,6 @@
             osc.stop(audioCtx.currentTime + 0.3);
         }
 
-        // تشغيل صوت خفيف عند تحميل الصفحة
         window.addEventListener('click', () => { if(audioCtx.state === 'suspended') audioCtx.resume(); }, {once: true});
 
         // قراءة المتغيرات من الرابط إن وجدت
@@ -269,16 +273,44 @@
             const team1 = document.getElementById('name1').innerText;
             const team2 = document.getElementById('name2').innerText;
             
-            const data = {
-                match: `${team1} vs ${team2}`,
-                prediction: `${score1} - ${score2}`,
-                user: tg.initDataUnsafe.user ? tg.initDataUnsafe.user.first_name : "زائر"
+            // جلب اسم المستخدم من تلجرام
+            const telegramUser = tg?.initDataUnsafe?.user;
+            const username = telegramUser 
+                ? (telegramUser.username ? "@" + telegramUser.username : telegramUser.first_name) 
+                : "زائر";
+
+            const matchName = `${team1} × ${team2}`;
+            const predictionResult = `${score1} - ${score2}`;
+
+            const payload = {
+                username: username,
+                prediction: predictionResult,
+                match: matchName
             };
 
-            setTimeout(() => {
-                tg.sendData(JSON.stringify(data));
-                tg.close();
-            }, 300);
+            // إرسال البيانات إلى Google Sheets
+            fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                cache: "no-cache",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8",
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                setTimeout(() => {
+                    alert("تم تسجيل توقعك بنجاح في جدول الأبطال! ⚽");
+                    if (tg) tg.close();
+                }, 300);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                setTimeout(() => {
+                    alert("تم إرسال التوقع، بالتوفيق! 🚀");
+                    if (tg) tg.close();
+                }, 300);
+            });
         }
     </script>
 </body>
