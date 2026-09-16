@@ -186,6 +186,13 @@
             transform: scale(0.97);
         }
 
+        .btn-submit:disabled {
+            background: #4a5568;
+            color: #a0aec0;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
@@ -226,7 +233,7 @@
             </div>
         </div>
 
-        <button class="btn-submit" onclick="submitPrediction()">إرسال التوقع واعتلاء الصدارة 🚀</button>
+        <button id="submitBtn" class="btn-submit" onclick="submitPrediction()">إرسال التوقع واعتلاء الصدارة 🚀</button>
     </div>
 
     <script>
@@ -237,6 +244,25 @@
 
         // رابط Apps Script الخاص بك لإرسال البيانات لجوجل شيت
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHgsMRzeazDEmoMJgbJTbesVYVJsixwPZTDn3W7qQYMUmwZWOlhBlkJusis51pQtsx/exec";
+
+        // التحقق من أن المستخدم قام بالتوقع مسبقاً على هذا الجهاز
+        const telegramUser = tg?.initDataUnsafe?.user;
+        const userId = telegramUser ? telegramUser.id : "guest_user";
+        const storageKey = `livekoora_voted_${userId}`;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem(storageKey)) {
+                lockAppAsVoted();
+            }
+        });
+
+        function lockAppAsVoted() {
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "لقد قمت بتسجيل توقعك مسبقاً ✅";
+            btn.disabled = true;
+            document.getElementById('score1').disabled = true;
+            document.getElementById('score2').disabled = true;
+        }
 
         // إنشاء مؤثرات صوتية تحفيزية
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -268,6 +294,11 @@
         if (urlParams.get('logo2')) document.getElementById('logo2').src = urlParams.get('logo2');
 
         function submitPrediction() {
+            if (localStorage.getItem(storageKey)) {
+                alert("لقد شاركت بتوقيعك من قبل ولا يمكنك التكرار!");
+                return;
+            }
+
             playChime();
 
             // تنفيذ إعلان Rewarded Popup (الأعلى ربحاً)
@@ -289,8 +320,6 @@
             const team1 = document.getElementById('name1').innerText;
             const team2 = document.getElementById('name2').innerText;
             
-            // جلب اسم المستخدم من تلجرام
-            const telegramUser = tg?.initDataUnsafe?.user;
             const username = telegramUser 
                 ? (telegramUser.username ? "@" + telegramUser.username : telegramUser.first_name) 
                 : "زائر";
@@ -315,6 +344,10 @@
                 body: JSON.stringify(payload)
             })
             .then(() => {
+                // حفظ حالة التصويت محلياً لمنع التكرار
+                localStorage.setItem(storageKey, "true");
+                lockAppAsVoted();
+
                 setTimeout(() => {
                     alert("تم تسجيل توقعك بنجاح في جدول الأبطال! ⚽");
                     if (tg) tg.close();
@@ -322,6 +355,9 @@
             })
             .catch(error => {
                 console.error("Error:", error);
+                localStorage.setItem(storageKey, "true");
+                lockAppAsVoted();
+
                 setTimeout(() => {
                     alert("تم إرسال التوقع، بالتوفيق! 🚀");
                     if (tg) tg.close();
